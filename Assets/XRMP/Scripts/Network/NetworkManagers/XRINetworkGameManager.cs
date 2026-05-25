@@ -225,7 +225,7 @@ namespace XRMultiplayer
             {
                 Utils.Log($"{k_DebugPrepend}Failed to Authenticate.", 1);
                 ConnectionFailed("Failed to Authenticate.");
-                PlayerHudNotification.Instance.ShowText($"Failed to Authenticate.");
+                PlayerHudNotification.Instance.ShowText($"Fallo al autenticarse.");
             }
             else
             {
@@ -291,7 +291,7 @@ namespace XRMultiplayer
         {
             LocalId = localPlayerId;
             m_Connected.Value = true;
-            PlayerHudNotification.Instance.ShowText($"<b>Status:</b> Connected");
+            PlayerHudNotification.Instance.ShowText($"<b>Estado:</b> Conectado");
         }
 
         /// <summary>
@@ -304,7 +304,7 @@ namespace XRMultiplayer
         {
             m_Connected.Value = false;
             m_CurrentPlayerIDs.Clear();
-            PlayerHudNotification.Instance.ShowText($"<b>Status:</b> Disconnected");
+            PlayerHudNotification.Instance.ShowText($"<b>Estado:</b> Desconectado");
             // Check if authenticated on disconnect.
             if (IsAuthenticated())
             {

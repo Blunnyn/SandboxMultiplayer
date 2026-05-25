@@ -64,7 +64,7 @@ namespace UnityEngine.XR.Templates.MRTTabletopAssets
             Utils.Log($"Game Mode Changed from {old} to {current}");
             for (int i = 0; i < m_GameModes.Length; i++)
             {
-                if (current == i)
+                if (current == m_GameModes[i].gameModeID)
                     m_GameModes[i].ShowGameMode();
                 else
                     m_GameModes[i].HideGameMode();

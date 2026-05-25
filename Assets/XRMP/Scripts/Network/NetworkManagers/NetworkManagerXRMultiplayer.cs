@@ -47,22 +47,22 @@ namespace XRMultiplayer
                 switch (XRINetworkGameManager.CurrentConnectionState.Value)
                 {
                     case XRINetworkGameManager.ConnectionState.None:
-                        GUILayout.Box("Authenticating");
+                        GUILayout.Box("Autenticando");
                         break;
                     case XRINetworkGameManager.ConnectionState.Authenticating:
-                        GUILayout.Box("Authenticating");
+                        GUILayout.Box("Autenticando");
                         break;
                     case XRINetworkGameManager.ConnectionState.Authenticated:
-                        if (GUILayout.Button("Connect"))
+                        if (GUILayout.Button("Conectar"))
                         {
                             XRINetworkGameManager.Instance.QuickJoinLobby();
                         }
                         break;
                     case XRINetworkGameManager.ConnectionState.Connecting:
-                        GUILayout.Box("Connecting");
+                        GUILayout.Box("Conectando");
                         break;
                     case XRINetworkGameManager.ConnectionState.Connected:
-                        if (GUILayout.Button("Disconnect"))
+                        if (GUILayout.Button("Desconectar"))
                         {
                             XRINetworkGameManager.Instance.Disconnect();
                         }
@@ -71,9 +71,9 @@ namespace XRMultiplayer
             }
             else
             {
-                GUILayout.Box("Game not running.");
+                GUILayout.Box("El juego no está corriendo.");
                 GUI.enabled = false;
-                GUILayout.Button("Connect");
+                GUILayout.Button("Conectar");
                 GUI.enabled = true;
             }
         }

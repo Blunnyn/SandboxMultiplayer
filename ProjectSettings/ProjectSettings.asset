@@ -915,11 +915,11 @@ PlayerSettings:
   captureStartupLogs: {}
   activeInputHandler: 1
   windowsGamepadBackendHint: 0
-  cloudProjectId: 
+  cloudProjectId: 74334e2c-cb5e-4850-bc5e-5a4c3d5da651
   framebufferDepthMemorylessMode: 0
   qualitySettingsNames: []
-  projectName: com.unity.mr-multiplayer
-  organizationId: 
+  projectName: SandboxMultiplayer
+  organizationId: blunnyn
   cloudEnabled: 0
   legacyClampBlendShapeWeights: 0
   hmiLoadingImage: {fileID: 0}

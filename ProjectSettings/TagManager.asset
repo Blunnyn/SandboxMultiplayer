@@ -9,6 +9,7 @@ TagManager:
   - PlayerHand
   - Anchor
   - Projectile
+  - SafetyCone
   layers:
   - Default
   - TransparentFX
