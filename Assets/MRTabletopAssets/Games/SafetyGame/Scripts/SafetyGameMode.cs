@@ -12,9 +12,12 @@ namespace UnityEngine.XR.Templates.MRTTabletopAssets
     {
         [Header("Configuración del Modo de Juego")]
         [SerializeField] private int m_GameModeID = 5;
-        
+
         [Tooltip("El contenedor principal de los elementos del minijuego (terreno, NPCs, zonas) que se activará o desactivará.")]
         public GameObject gameModeContainer;
+
+        [Tooltip("Dispensador de conos del minijuego. Necesario para reiniciar sus corrutinas al mostrar el modo.")]
+        public NetworkObjectDispenser coneDispenser;
 
         /// <summary>
         /// ID del modo de juego para el GameModeManager.
@@ -38,6 +41,12 @@ namespace UnityEngine.XR.Templates.MRTTabletopAssets
         public void HideGameMode()
         {
             Debug.Log($"[Safety Game Mode] Ocultando el modo de juego (Servidor: {IsServer}, Cliente ID: {NetworkManager.Singleton.LocalClientId})");
+
+            if (coneDispenser != null && coneDispenser.gameObject.activeInHierarchy)
+            {
+                coneDispenser.Hide();
+            }
+
             if (gameModeContainer != null)
             {
                 gameModeContainer.SetActive(false);
@@ -55,6 +64,11 @@ namespace UnityEngine.XR.Templates.MRTTabletopAssets
             if (gameModeContainer != null)
             {
                 gameModeContainer.SetActive(true);
+            }
+
+            if (coneDispenser != null)
+            {
+                coneDispenser.Show();
             }
 
             OnGameModeStart();

@@ -25,6 +25,18 @@ PrefabInstance:
       value: 247
       objectReference: {fileID: 0}
     - target: {fileID: 4099506375350376, guid: 41c4aa0ed926d03478c0597806cb29ac, type: 3}
+      propertyPath: m_LocalScale.x
+      value: 0.01
+      objectReference: {fileID: 0}
+    - target: {fileID: 4099506375350376, guid: 41c4aa0ed926d03478c0597806cb29ac, type: 3}
+      propertyPath: m_LocalScale.y
+      value: 0.01
+      objectReference: {fileID: 0}
+    - target: {fileID: 4099506375350376, guid: 41c4aa0ed926d03478c0597806cb29ac, type: 3}
+      propertyPath: m_LocalScale.z
+      value: 0.01
+      objectReference: {fileID: 0}
+    - target: {fileID: 4099506375350376, guid: 41c4aa0ed926d03478c0597806cb29ac, type: 3}
       propertyPath: m_LocalPosition.x
       value: -19.460005
       objectReference: {fileID: 0}
@@ -56,7 +68,12 @@ PrefabInstance:
       propertyPath: m_LocalEulerAnglesHint.y
       value: 40.414
       objectReference: {fileID: 0}
-    m_RemovedComponents: []
+    - target: {fileID: 4099506375350376, guid: 41c4aa0ed926d03478c0597806cb29ac, type: 3}
+      propertyPath: m_ConstrainProportionsScale
+      value: 1
+      objectReference: {fileID: 0}
+    m_RemovedComponents:
+    - {fileID: 64902234878624394, guid: 41c4aa0ed926d03478c0597806cb29ac, type: 3}
     m_RemovedGameObjects: []
     m_AddedGameObjects: []
     m_AddedComponents:
@@ -79,19 +96,15 @@ PrefabInstance:
     - targetCorrespondingSourceObject: {fileID: 1956315680376676, guid: 41c4aa0ed926d03478c0597806cb29ac,
         type: 3}
       insertIndex: -1
-      addedObject: {fileID: 5164453950184740172}
-    - targetCorrespondingSourceObject: {fileID: 1956315680376676, guid: 41c4aa0ed926d03478c0597806cb29ac,
-        type: 3}
-      insertIndex: -1
-      addedObject: {fileID: 2569930584341713037}
-    - targetCorrespondingSourceObject: {fileID: 1956315680376676, guid: 41c4aa0ed926d03478c0597806cb29ac,
-        type: 3}
-      insertIndex: -1
       addedObject: {fileID: 15621812514455307}
     - targetCorrespondingSourceObject: {fileID: 1956315680376676, guid: 41c4aa0ed926d03478c0597806cb29ac,
         type: 3}
       insertIndex: -1
       addedObject: {fileID: 6566714744083433045}
+    - targetCorrespondingSourceObject: {fileID: 1956315680376676, guid: 41c4aa0ed926d03478c0597806cb29ac,
+        type: 3}
+      insertIndex: -1
+      addedObject: {fileID: 5636619294803202051}
   m_SourcePrefab: {fileID: 100100000, guid: 41c4aa0ed926d03478c0597806cb29ac, type: 3}
 --- !u!1 &3826990897808913880 stripped
 GameObject:
@@ -139,8 +152,7 @@ MonoBehaviour:
   m_Name: 
   m_EditorClassIdentifier: Unity.XR.Interaction.Toolkit::UnityEngine.XR.Interaction.Toolkit.Interactables.XRGrabInteractable
   m_InteractionManager: {fileID: 0}
-  m_Colliders:
-  - {fileID: 3890077150705807414}
+  m_Colliders: []
   m_InteractionLayers:
     m_Bits: 1
   m_DistanceCalculationMode: 1
@@ -291,7 +303,7 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: d5a57f767e5e46a458fc5d3c628d0cbb, type: 3}
   m_Name: 
   m_EditorClassIdentifier: Unity.Netcode.Runtime::Unity.Netcode.NetworkObject
-  GlobalObjectIdHash: 1393576504
+  GlobalObjectIdHash: 1942964463
   InScenePlacedSourceGlobalObjectIdHash: 0
   DeferredDespawnTick: 0
   Ownership: 1
@@ -304,69 +316,6 @@ MonoBehaviour:
   AutoObjectParentSync: 1
   SyncOwnerTransformWhenParented: 1
   AllowOwnerToParent: 0
---- !u!114 &5164453950184740172
-MonoBehaviour:
-  m_ObjectHideFlags: 0
-  m_CorrespondingSourceObject: {fileID: 0}
-  m_PrefabInstance: {fileID: 0}
-  m_PrefabAsset: {fileID: 0}
-  m_GameObject: {fileID: 3826990897808913880}
-  m_Enabled: 1
-  m_EditorHideFlags: 0
-  m_Script: {fileID: 11500000, guid: 60523e0647cc6ab43acc73cb266a32a7, type: 3}
-  m_Name: 
-  m_EditorClassIdentifier: Unity.XR.Interaction.Toolkit::UnityEngine.XR.Interaction.Toolkit.Interactors.XRSocketInteractor
-  m_InteractionManager: {fileID: 0}
-  m_InteractionLayers:
-    m_Bits: 4294967295
-  m_Handedness: 0
-  m_AttachTransform: {fileID: 0}
-  m_KeepSelectedTargetValid: 1
-  m_DisableVisualsWhenBlockedInGroup: 1
-  m_StartingSelectedInteractable: {fileID: 0}
-  m_StartingTargetFilter: {fileID: 0}
-  m_AutoFindParentInteractableInHierarchy: 0
-  m_ParentInteractableObject: {fileID: 0}
-  m_HoverEntered:
-    m_PersistentCalls:
-      m_Calls: []
-  m_HoverExited:
-    m_PersistentCalls:
-      m_Calls: []
-  m_SelectEntered:
-    m_PersistentCalls:
-      m_Calls: []
-  m_SelectExited:
-    m_PersistentCalls:
-      m_Calls: []
-  m_StartingHoverFilters: []
-  m_StartingSelectFilters: []
-  m_ShowInteractableHoverMeshes: 1
-  m_InteractableHoverMeshMaterial: {fileID: 0}
-  m_InteractableCantHoverMeshMaterial: {fileID: 0}
-  m_SocketActive: 1
-  m_InteractableHoverScale: 1
-  m_RecycleDelayTime: 1
-  m_HoverSocketSnapping: 0
-  m_SocketSnappingRadius: 0.1
-  m_SocketScaleMode: 0
-  m_FixedScale: {x: 1, y: 1, z: 1}
-  m_TargetBoundsSize: {x: 1, y: 1, z: 1}
---- !u!114 &2569930584341713037
-MonoBehaviour:
-  m_ObjectHideFlags: 0
-  m_CorrespondingSourceObject: {fileID: 0}
-  m_PrefabInstance: {fileID: 0}
-  m_PrefabAsset: {fileID: 0}
-  m_GameObject: {fileID: 3826990897808913880}
-  m_Enabled: 1
-  m_EditorHideFlags: 0
-  m_Script: {fileID: 11500000, guid: 903f41050373645998031f886430d2fb, type: 3}
-  m_Name: 
-  m_EditorClassIdentifier: MRTTT::XRMultiplayer.SafetyGame.SafetyConoSocket
-  ShowTopMostFoldoutHeaderGroup: 1
-  m_HazardZone: {fileID: 0}
-  m_ConeTag: SafetyCone
 --- !u!114 &15621812514455307
 MonoBehaviour:
   m_ObjectHideFlags: 0
@@ -465,9 +414,24 @@ MonoBehaviour:
   m_AllowCollisionOwnershipExchange: 1
   m_MinExchangeVelocityMagitude: 0.025
   spawnLocked: 1
---- !u!64 &3890077150705807414 stripped
-MeshCollider:
-  m_CorrespondingSourceObject: {fileID: 64902234878624394, guid: 41c4aa0ed926d03478c0597806cb29ac,
-    type: 3}
-  m_PrefabInstance: {fileID: 3826582711720424124}
+--- !u!65 &5636619294803202051
+BoxCollider:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
   m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 3826990897808913880}
+  m_Material: {fileID: 0}
+  m_IncludeLayers:
+    serializedVersion: 2
+    m_Bits: 0
+  m_ExcludeLayers:
+    serializedVersion: 2
+    m_Bits: 0
+  m_LayerOverridePriority: 0
+  m_IsTrigger: 0
+  m_ProvidesContacts: 0
+  m_Enabled: 1
+  serializedVersion: 3
+  m_Size: {x: 0.40688974, y: 0.9889462, z: 0.39704517}
+  m_Center: {x: -0.000000022351745, y: 0.4944731, z: 0.00000014901161}
