@@ -14,6 +14,8 @@ namespace XRMultiplayer.SafetyGame
         [SerializeField] private Transform[] m_Waypoints;
         [SerializeField] private float m_MovementSpeed = 1.0f;
         [SerializeField] private float m_AlertDuration = 3.5f;
+        [SerializeField] private float m_EndOfRouteWaitTime = 20f;
+        [SerializeField] private Animator m_Animator;
 
         // Variables de red para sincronizar los estados del NPC
         public NetworkVariable<bool> isInDanger = new NetworkVariable<bool>(false, NetworkVariableReadPermission.Everyone, NetworkVariableWritePermission.Owner);
@@ -22,6 +24,7 @@ namespace XRMultiplayer.SafetyGame
         private int m_CurrentWaypointIndex = 0;
         private bool m_IsStopped = false;
         private Coroutine m_ResumeMovementCoroutine;
+        private Coroutine m_EndOfRouteCoroutine;
 
         private void Start()
         {
@@ -75,7 +78,17 @@ namespace XRMultiplayer.SafetyGame
             // Comprobar si llegó al destino
             if (Vector3.Distance(transform.position, targetPosition) < 0.05f)
             {
-                m_CurrentWaypointIndex = (m_CurrentWaypointIndex + 1) % m_Waypoints.Length;
+                if (m_CurrentWaypointIndex == m_Waypoints.Length - 1)
+                {
+                    m_CurrentWaypointIndex = 0;
+                    m_IsStopped = true;
+                    if (m_EndOfRouteCoroutine != null) StopCoroutine(m_EndOfRouteCoroutine);
+                    m_EndOfRouteCoroutine = StartCoroutine(WaitAtEndOfRoute());
+                }
+                else
+                {
+                    m_CurrentWaypointIndex++;
+                }
             }
         }
 
@@ -119,11 +132,23 @@ namespace XRMultiplayer.SafetyGame
         private IEnumerator ResumeMovementRoutine()
         {
             yield return new WaitForSeconds(m_AlertDuration);
-            
+
             if (IsServer)
             {
                 m_IsStopped = false;
                 isAlerted.Value = false;
+                if (m_Animator != null) m_Animator.SetBool("IsWalking", true);
+            }
+        }
+
+        private IEnumerator WaitAtEndOfRoute()
+        {
+            if (m_Animator != null) m_Animator.SetBool("IsWalking", false);
+            yield return new WaitForSeconds(m_EndOfRouteWaitTime);
+            if (IsServer)
+            {
+                m_IsStopped = false;
+                if (m_Animator != null) m_Animator.SetBool("IsWalking", true);
             }
         }
 

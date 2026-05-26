@@ -27038,7 +27038,7 @@ PrefabInstance:
     - target: {fileID: 7961646215471919836, guid: 917fc4a8dfa49994eb46af1d962fc794,
         type: 3}
       propertyPath: m_text
-      value: Leave Table
+      value: Abandonar mesa
       objectReference: {fileID: 0}
     - target: {fileID: 7961646215471919836, guid: 917fc4a8dfa49994eb46af1d962fc794,
         type: 3}
