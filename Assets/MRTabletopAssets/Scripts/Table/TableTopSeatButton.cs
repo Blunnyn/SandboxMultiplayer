@@ -57,9 +57,9 @@ namespace UnityEngine.XR.Templates.MRTTabletopAssets
         bool m_IsLocalPlayer = false;
 
         [SerializeField]
-        string m_AvailableSeatText = "<color=#7B7B7B><i>Available</i></color>";
+        string m_AvailableSeatText = "<color=#7B7B7B><i>Disponible</i></color>";
 
-        string m_PlayerNameInSeat = "Player Name";
+        string m_PlayerNameInSeat = "Nombre del jugador";
 
         XRINetworkPlayer m_PlayerInSeat;
         [SerializeField] Button m_MuteButton;
@@ -79,7 +79,7 @@ namespace UnityEngine.XR.Templates.MRTTabletopAssets
                     icon.color = m_SeatColors[m_SeatID];
 
                 m_SeatNumberText.text = (m_SeatID + 1).ToString();
-                m_SeatNameText.text = "Seat " + (m_SeatID + 1);
+                m_SeatNameText.text = "Asiento " + (m_SeatID + 1);
             }
             else
             {
@@ -99,7 +99,7 @@ namespace UnityEngine.XR.Templates.MRTTabletopAssets
         public void SetPlayerName(string name)
         {
             m_PlayerNameInSeat = name;
-            m_PlayerInSeatText.text = m_IsOccupied ? (m_IsLocalPlayer ? "You" : m_PlayerNameInSeat) : m_AvailableSeatText;
+            m_PlayerInSeatText.text = m_IsOccupied ? (m_IsLocalPlayer ? "Tu" : m_PlayerNameInSeat) : m_AvailableSeatText;
         }
 
         public void SetLocalPlayer(bool local, bool updateOccupied = true)
@@ -187,7 +187,7 @@ namespace UnityEngine.XR.Templates.MRTTabletopAssets
             m_IsOccupied = occupied;
             if (!m_IsSpectator)
                 m_SeatImages[1].enabled = m_IsOccupied;
-            m_PlayerInSeatText.text = m_IsOccupied ? (m_IsLocalPlayer ? "You" : m_PlayerNameInSeat) : m_AvailableSeatText;
+            m_PlayerInSeatText.text = m_IsOccupied ? (m_IsLocalPlayer ? "Tu" : m_PlayerNameInSeat) : m_AvailableSeatText;
 
             SetHover(m_IsHovered);
         }

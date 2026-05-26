@@ -295,7 +295,7 @@ namespace UnityEngine.XR.Templates.MRTTabletopAssets
 
         void UpdateVoiceChatStatus(string statusMessage)
         {
-            m_VoiceChatStatus.text = $"<b>Voice Chat:</b> {statusMessage}";
+            m_VoiceChatStatus.text = $"<b>Chat de voz:</b> {statusMessage}";
         }
         public void SetVolumeLevel(float sliderValue)
         {
@@ -341,7 +341,7 @@ namespace UnityEngine.XR.Templates.MRTTabletopAssets
         {
             foreach (var text in m_RoomCodeTexts)
             {
-                text.text = $"Table Code: {XRINetworkGameManager.ConnectedRoomCode}";
+                text.text = $"Codigo de mesa: {XRINetworkGameManager.ConnectedRoomCode}";
             }
             foreach (var t in m_RoomNameText)
             {

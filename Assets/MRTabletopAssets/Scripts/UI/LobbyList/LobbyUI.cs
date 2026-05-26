@@ -102,10 +102,10 @@ namespace UnityEngine.XR.Templates.MRTTabletopAssets
             XRINetworkGameManager.Connected.Subscribe(OnConnected);
             if (string.IsNullOrEmpty(m_RoomNameText.text) || m_RoomNameText.text == "<Room Name>")
             {
-                m_RoomNameText.text = $"{XRINetworkGameManager.LocalPlayerName.Value}'s Table";
+                m_RoomNameText.text = $"Mesa de {XRINetworkGameManager.LocalPlayerName.Value}";
             }
             XRINetworkGameManager.Instance.CreateNewLobby(m_RoomNameText.text, m_Private, m_PlayerCount);
-            m_ConnectionSuccessText.text = $"Joining {m_RoomNameText.text}";
+            m_ConnectionSuccessText.text = $"Uniendose a {m_RoomNameText.text}";
         }
 
         public void UpdatePlayerCount(int count)
@@ -146,7 +146,7 @@ namespace UnityEngine.XR.Templates.MRTTabletopAssets
             ToggleConnectionSubPanel(3);
             XRINetworkGameManager.Connected.Subscribe(OnConnected);
             XRINetworkGameManager.Instance.JoinLobbyByCode(roomCode.ToUpper());
-            m_ConnectionSuccessText.text = $"Joining Room: {roomCode.ToUpper()}";
+            m_ConnectionSuccessText.text = $"Uniendose a sala: {roomCode.ToUpper()}";
         }
 
         public void JoinLobby(Lobby lobby)
@@ -154,14 +154,14 @@ namespace UnityEngine.XR.Templates.MRTTabletopAssets
             ToggleConnectionSubPanel(3);
             XRINetworkGameManager.Connected.Subscribe(OnConnected);
             XRINetworkGameManager.Instance.JoinLobbySpecific(lobby);
-            m_ConnectionSuccessText.text = $"Joining {lobby.Name}";
+            m_ConnectionSuccessText.text = $"Uniendose a {lobby.Name}";
         }
 
         public void QuickJoinLobby()
         {
             XRINetworkGameManager.Connected.Subscribe(OnConnected);
             XRINetworkGameManager.Instance.QuickJoinLobby();
-            m_ConnectionSuccessText.text = "Joining Random";
+            m_ConnectionSuccessText.text = "Uniendose aleatoriamente";
         }
 
         public void SetVoiceChatAudidibleDistance(int audibleDistance)
