@@ -57,7 +57,7 @@ namespace UnityEngine.XR.Templates.MRTTabletopAssets
                 spawnerTransform.position,
                 spawnerTransform.rotation
             );
-            spawnedInteractable.transform.localScale = spawnerTransform.localScale;
+            spawnedInteractable.transform.localScale = spawnerTransform.lossyScale;
 
             return spawnedInteractable;
         }

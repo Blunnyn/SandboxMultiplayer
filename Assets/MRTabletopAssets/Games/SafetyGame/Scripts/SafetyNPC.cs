@@ -21,6 +21,11 @@ namespace XRMultiplayer.SafetyGame
         public NetworkVariable<bool> isInDanger = new NetworkVariable<bool>(false, NetworkVariableReadPermission.Everyone, NetworkVariableWritePermission.Owner);
         public NetworkVariable<bool> isAlerted = new NetworkVariable<bool>(false, NetworkVariableReadPermission.Everyone, NetworkVariableWritePermission.Owner);
 
+        // Sincronización de posición y rotación (el NetworkTransform no funciona en scene overrides)
+        private NetworkVariable<Vector3> m_NetPosition = new NetworkVariable<Vector3>(Vector3.zero, NetworkVariableReadPermission.Everyone, NetworkVariableWritePermission.Server);
+        private NetworkVariable<float> m_NetRotationY = new NetworkVariable<float>(0f, NetworkVariableReadPermission.Everyone, NetworkVariableWritePermission.Server);
+        private NetworkVariable<bool> m_NetIsWalking = new NetworkVariable<bool>(true, NetworkVariableReadPermission.Everyone, NetworkVariableWritePermission.Server);
+
         private int m_CurrentWaypointIndex = 0;
         private bool m_IsStopped = false;
         private Coroutine m_ResumeMovementCoroutine;
@@ -37,23 +42,47 @@ namespace XRMultiplayer.SafetyGame
         public override void OnNetworkSpawn()
         {
             base.OnNetworkSpawn();
-            
+
             if (IsServer)
             {
                 isInDanger.Value = false;
                 isAlerted.Value = false;
+                m_NetPosition.Value = transform.position;
+                m_NetRotationY.Value = transform.eulerAngles.y;
+                m_NetIsWalking.Value = true;
+            }
+            else
+            {
+                // Clientes: aplicar posición inicial y suscribirse a cambios de animación
+                transform.position = m_NetPosition.Value;
+                m_NetIsWalking.OnValueChanged += (_, current) =>
+                {
+                    if (m_Animator != null) m_Animator.SetBool("IsWalking", current);
+                };
+                if (m_Animator != null) m_Animator.SetBool("IsWalking", m_NetIsWalking.Value);
             }
         }
 
         private void Update()
         {
-            // Solo el servidor calcula y mueve al NPC (autoridad del servidor)
-            if (!IsServer || m_IsStopped || m_Waypoints.Length == 0) return;
-
-            // Si el juego ha terminado, no mover
-            if (SafetyGameManager.Instance != null && !SafetyGameManager.Instance.isGameActive.Value) return;
-
-            MoveTowardsWaypoint();
+            if (IsServer)
+            {
+                if (!m_IsStopped && m_Waypoints.Length > 0)
+                {
+                    if (SafetyGameManager.Instance == null || SafetyGameManager.Instance.isGameActive.Value)
+                        MoveTowardsWaypoint();
+                }
+                m_NetPosition.Value = transform.position;
+                m_NetRotationY.Value = transform.eulerAngles.y;
+            }
+            else
+            {
+                // Clientes: interpolar hacia la posición del servidor
+                transform.position = Vector3.Lerp(transform.position, m_NetPosition.Value, Time.deltaTime * 15f);
+                Vector3 e = transform.eulerAngles;
+                e.y = Mathf.LerpAngle(e.y, m_NetRotationY.Value, Time.deltaTime * 15f);
+                transform.eulerAngles = e;
+            }
         }
 
         private void MoveTowardsWaypoint()
@@ -121,6 +150,8 @@ namespace XRMultiplayer.SafetyGame
 
             isAlerted.Value = true;
             m_IsStopped = true;
+            m_NetIsWalking.Value = false;
+            if (m_Animator != null) m_Animator.SetBool("IsWalking", false);
 
             if (m_ResumeMovementCoroutine != null)
             {
@@ -137,17 +168,20 @@ namespace XRMultiplayer.SafetyGame
             {
                 m_IsStopped = false;
                 isAlerted.Value = false;
+                m_NetIsWalking.Value = true;
                 if (m_Animator != null) m_Animator.SetBool("IsWalking", true);
             }
         }
 
         private IEnumerator WaitAtEndOfRoute()
         {
+            m_NetIsWalking.Value = false;
             if (m_Animator != null) m_Animator.SetBool("IsWalking", false);
             yield return new WaitForSeconds(m_EndOfRouteWaitTime);
             if (IsServer)
             {
                 m_IsStopped = false;
+                m_NetIsWalking.Value = true;
                 if (m_Animator != null) m_Animator.SetBool("IsWalking", true);
             }
         }
