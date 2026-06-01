@@ -284,7 +284,7 @@ namespace XRMultiplayer.SafetyGame
         }
 
 #if UNITY_EDITOR
-        private void OnDrawGizmos()
+        private void OnDrawGizmosSelected()
         {
             if (m_Waypoints == null || m_Waypoints.Length == 0) return;
 

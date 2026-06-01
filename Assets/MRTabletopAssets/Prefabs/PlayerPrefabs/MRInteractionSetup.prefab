@@ -2836,7 +2836,7 @@ PrefabInstance:
     - target: {fileID: 3557840064565183711, guid: d6878e1999eb4b44a9f5a263af86c185,
         type: 3}
       propertyPath: m_CastRadius
-      value: 0.035
+      value: 0.01
       objectReference: {fileID: 0}
     - target: {fileID: 3734454871926262481, guid: d6878e1999eb4b44a9f5a263af86c185,
         type: 3}
@@ -3022,7 +3022,7 @@ PrefabInstance:
     - target: {fileID: 5786981526182599232, guid: d6878e1999eb4b44a9f5a263af86c185,
         type: 3}
       propertyPath: m_CastRadius
-      value: 0.035
+      value: 0.01
       objectReference: {fileID: 0}
     - target: {fileID: 5807523068563062282, guid: d6878e1999eb4b44a9f5a263af86c185,
         type: 3}
