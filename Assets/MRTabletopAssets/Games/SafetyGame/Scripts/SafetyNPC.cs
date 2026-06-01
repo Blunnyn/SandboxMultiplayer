@@ -37,6 +37,10 @@ namespace XRMultiplayer.SafetyGame
             {
                 SafetyGameManager.Instance.RegisterNPC(this);
             }
+
+            // Forzar estado idle por defecto en todos los clientes (independiente de red)
+            m_IsStopped = true;
+            if (m_Animator != null) m_Animator.SetBool("IsWalking", false);
         }
 
         public override void OnNetworkSpawn()
@@ -49,7 +53,7 @@ namespace XRMultiplayer.SafetyGame
                 isAlerted.Value = false;
                 m_NetPosition.Value = transform.position;
                 m_NetRotationY.Value = transform.eulerAngles.y;
-                m_NetIsWalking.Value = true;
+                m_NetIsWalking.Value = false;
             }
             else
             {
