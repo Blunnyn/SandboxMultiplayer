@@ -1980,7 +1980,7 @@ GameObject:
   m_Icon: {fileID: 0}
   m_NavMeshLayer: 0
   m_StaticEditorFlags: 0
-  m_IsActive: 1
+  m_IsActive: 0
 --- !u!4 &2368989158066670402
 Transform:
   m_ObjectHideFlags: 0
@@ -3702,10 +3702,6 @@ PrefabInstance:
     - targetCorrespondingSourceObject: {fileID: 1220888220448734, guid: 54a60470ee4d56046b34840ce90220be,
         type: 3}
       insertIndex: -1
-      addedObject: {fileID: 4838372420943775485}
-    - targetCorrespondingSourceObject: {fileID: 1220888220448734, guid: 54a60470ee4d56046b34840ce90220be,
-        type: 3}
-      insertIndex: -1
       addedObject: {fileID: 1167534209731643141}
     - targetCorrespondingSourceObject: {fileID: 1220888220448734, guid: 54a60470ee4d56046b34840ce90220be,
         type: 3}
@@ -3747,31 +3743,6 @@ CapsuleCollider:
   m_Height: 1.8506342
   m_Direction: 1
   m_Center: {x: 0, y: 0.9144819, z: 0}
---- !u!114 &4838372420943775485
-MonoBehaviour:
-  m_ObjectHideFlags: 0
-  m_CorrespondingSourceObject: {fileID: 0}
-  m_PrefabInstance: {fileID: 0}
-  m_PrefabAsset: {fileID: 0}
-  m_GameObject: {fileID: 128209785470244001}
-  m_Enabled: 1
-  m_EditorHideFlags: 0
-  m_Script: {fileID: 11500000, guid: d5a57f767e5e46a458fc5d3c628d0cbb, type: 3}
-  m_Name: 
-  m_EditorClassIdentifier: Unity.Netcode.Runtime::Unity.Netcode.NetworkObject
-  GlobalObjectIdHash: 1040197811
-  InScenePlacedSourceGlobalObjectIdHash: 0
-  DeferredDespawnTick: 0
-  Ownership: 1
-  AlwaysReplicateAsRoot: 0
-  SynchronizeTransform: 1
-  ActiveSceneSynchronization: 0
-  SceneMigrationSynchronization: 0
-  SpawnWithObservers: 1
-  DontDestroyWithOwner: 0
-  AutoObjectParentSync: 1
-  SyncOwnerTransformWhenParented: 1
-  AllowOwnerToParent: 0
 --- !u!114 &1167534209731643141
 MonoBehaviour:
   m_ObjectHideFlags: 0
@@ -3855,6 +3826,19 @@ MonoBehaviour:
           m_StringArgument: 
           m_BoolArgument: 1
         m_CallState: 2
+      - m_Target: {fileID: 7833724245175116694}
+        m_TargetAssemblyTypeName: UnityEngine.AudioSource, UnityEngine
+        m_MethodName: PlayOneShot
+        m_Mode: 2
+        m_Arguments:
+          m_ObjectArgument: {fileID: 8300000, guid: 33b8698f2fb83824daa83048b77e5c59,
+            type: 3}
+          m_ObjectArgumentAssemblyTypeName: UnityEngine.AudioClip, UnityEngine
+          m_IntArgument: 0
+          m_FloatArgument: 0
+          m_StringArgument: 
+          m_BoolArgument: 1
+        m_CallState: 2
   m_LastHoverExited:
     m_PersistentCalls:
       m_Calls:
@@ -3926,6 +3910,12 @@ Transform:
 --- !u!1 &5076139737303324006 stripped
 GameObject:
   m_CorrespondingSourceObject: {fileID: 5165974331690055193, guid: 54a60470ee4d56046b34840ce90220be,
+    type: 3}
+  m_PrefabInstance: {fileID: 126989722959373183}
+  m_PrefabAsset: {fileID: 0}
+--- !u!82 &7833724245175116694 stripped
+AudioSource:
+  m_CorrespondingSourceObject: {fileID: 7887442082486894825, guid: 54a60470ee4d56046b34840ce90220be,
     type: 3}
   m_PrefabInstance: {fileID: 126989722959373183}
   m_PrefabAsset: {fileID: 0}
