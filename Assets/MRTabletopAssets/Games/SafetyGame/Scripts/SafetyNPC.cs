@@ -6,73 +6,51 @@ namespace XRMultiplayer.SafetyGame
 {
     /// <summary>
     /// Representa un trabajador NPC en la construcción.
-    /// Se desplaza entre waypoints definidos y reacciona cuando los jugadores le alertan de peligros.
+    /// Se instancia dinámicamente (spawn de red) cuando arranca el minijuego y recorre
+    /// la ruta de waypoints que le entrega el SafetyGameMode. Reacciona cuando los
+    /// jugadores le alertan de peligros.
     /// </summary>
     public class SafetyNPC : NetworkBehaviour
     {
         [Header("Configuración de Movimiento")]
-        [SerializeField] private Transform[] m_Waypoints;
-        [SerializeField] private float m_MovementSpeed = 1.0f;
+        [SerializeField] private float m_MovementSpeed = 0.02f;
         [SerializeField] private float m_ArrivalThreshold = 0.001f;
         [SerializeField] private float m_AlertDuration = 3.5f;
+        [SerializeField] private float m_AlertCooldown = 3f;
         [SerializeField] private float m_EndOfRouteWaitTime = 20f;
         [SerializeField] private Animator m_Animator;
+
+        [Header("UI de Alerta")]
+        [Tooltip("GameObject hijo dentro del Canvas que se activa/desactiva para todos los jugadores cuando se interactúa con el trabajador (p.ej. el panel o imagen de alerta, no el Canvas raíz).")]
+        [SerializeField] private GameObject m_AlertUIContent;
+
+        // La ruta se asigna en runtime desde el servidor (los waypoints son objetos de escena,
+        // no se pueden serializar en el prefab). Solo el servidor la utiliza.
+        private Transform[] m_Waypoints;
 
         // Variables de red para sincronizar los estados del NPC
         public NetworkVariable<bool> isInDanger = new NetworkVariable<bool>(false, NetworkVariableReadPermission.Everyone, NetworkVariableWritePermission.Server);
         public NetworkVariable<bool> isAlerted = new NetworkVariable<bool>(false, NetworkVariableReadPermission.Everyone, NetworkVariableWritePermission.Server);
 
-        // Sincronización de posición y rotación (el NetworkTransform no funciona en scene overrides)
+        // Sincronización de posición y rotación (el NetworkTransform no funciona bien con la escala de mesa)
         private NetworkVariable<Vector3> m_NetPosition = new NetworkVariable<Vector3>(Vector3.zero, NetworkVariableReadPermission.Everyone, NetworkVariableWritePermission.Server);
         private NetworkVariable<float> m_NetRotationY = new NetworkVariable<float>(0f, NetworkVariableReadPermission.Everyone, NetworkVariableWritePermission.Server);
-        private NetworkVariable<bool> m_NetIsWalking = new NetworkVariable<bool>(true, NetworkVariableReadPermission.Everyone, NetworkVariableWritePermission.Server);
+        private NetworkVariable<bool> m_NetIsWalking = new NetworkVariable<bool>(false, NetworkVariableReadPermission.Everyone, NetworkVariableWritePermission.Server);
+        private NetworkVariable<bool> m_NetUIVisible = new NetworkVariable<bool>(false, NetworkVariableReadPermission.Everyone, NetworkVariableWritePermission.Server);
 
         private int m_CurrentWaypointIndex = 0;
-        private bool m_IsStopped = false;
+        private bool m_IsStopped = true;
+        private bool m_IsOnCooldown = false;
         private bool m_HasNetworkData = false;
-        private Coroutine m_StartMovementCoroutine;
         private Coroutine m_ResumeMovementCoroutine;
         private Coroutine m_EndOfRouteCoroutine;
-
-        private void Start()
-        {
-            if (SafetyGameManager.Instance != null)
-                SafetyGameManager.Instance.RegisterNPC(this);
-
-            m_IsStopped = true;
-            if (m_Animator != null) m_Animator.SetBool("IsWalking", false);
-        }
-
-        private void OnEnable()
-        {
-            if (m_Animator != null) m_Animator.SetBool("IsWalking", false);
-
-            if (m_Waypoints.Length == 0) return;
-            if (NetworkManager.Singleton == null || !NetworkManager.Singleton.IsServer) return;
-
-            if (m_StartMovementCoroutine != null) StopCoroutine(m_StartMovementCoroutine);
-            m_StartMovementCoroutine = StartCoroutine(StartMovementWhenReady());
-        }
-
-        private void OnDisable()
-        {
-            if (m_StartMovementCoroutine != null)
-            {
-                StopCoroutine(m_StartMovementCoroutine);
-                m_StartMovementCoroutine = null;
-            }
-        }
-
-        public override void OnNetworkDespawn()
-        {
-            base.OnNetworkDespawn();
-            if (IsServer && SafetyGameManager.Instance != null)
-                SafetyGameManager.Instance.isGameActive.OnValueChanged -= OnGameActiveChanged;
-        }
 
         public override void OnNetworkSpawn()
         {
             base.OnNetworkSpawn();
+
+            if (SafetyGameManager.Instance != null)
+                SafetyGameManager.Instance.RegisterNPC(this);
 
             if (IsServer)
             {
@@ -81,72 +59,57 @@ namespace XRMultiplayer.SafetyGame
                 m_NetPosition.Value = transform.position;
                 m_NetRotationY.Value = transform.eulerAngles.y;
                 m_NetIsWalking.Value = false;
-                // El inicio del movimiento se maneja en OnEnable, que corre después del spawn
+                m_NetUIVisible.Value = false;
+                m_HasNetworkData = true;
+                if (m_Animator != null) m_Animator.SetBool("IsWalking", false);
             }
             else
             {
-                // Clientes: NO sobrescribir la posición de escena con un valor potencialmente
-                // sin inicializar (Vector3.zero). Esperar a recibir una posición real del servidor.
-                m_NetPosition.OnValueChanged += (_, _) => m_HasNetworkData = true;
-                if (m_NetPosition.Value != Vector3.zero)
-                {
-                    m_HasNetworkData = true;
-                    transform.position = m_NetPosition.Value;
-                }
+                transform.position = m_NetPosition.Value;
+                m_HasNetworkData = true;
 
+                m_NetPosition.OnValueChanged += (_, _) => m_HasNetworkData = true;
                 m_NetIsWalking.OnValueChanged += (_, current) =>
                 {
                     if (m_Animator != null) m_Animator.SetBool("IsWalking", current);
                 };
                 if (m_Animator != null) m_Animator.SetBool("IsWalking", m_NetIsWalking.Value);
             }
+
+            // Todos (servidor y clientes) reaccionan al cambio de visibilidad del contenido de la UI.
+            m_NetUIVisible.OnValueChanged += (_, visible) => SetUIContentVisible(visible);
+            SetUIContentVisible(m_NetUIVisible.Value);
         }
 
-        private IEnumerator StartMovementWhenReady()
-        {
-            yield return new WaitUntil(() =>
-                SafetyGameManager.Instance != null &&
-                SafetyGameManager.Instance.isGameActive.Value);
-
-            if (m_Waypoints.Length == 0) yield break;
-            if (NetworkManager.Singleton == null || !NetworkManager.Singleton.IsServer) yield break;
-
-            SafetyGameManager.Instance.isGameActive.OnValueChanged += OnGameActiveChanged;
-            StartNPC();
-        }
-
-        private void OnGameActiveChanged(bool previous, bool current)
+        /// <summary>
+        /// Asigna la ruta de waypoints y pone al NPC en marcha. Solo servidor.
+        /// </summary>
+        public void InitializeRoute(Transform[] waypoints)
         {
             if (!IsServer) return;
-            if (current)
-                StartNPC();
-            else
-                StopNPC();
-        }
 
-        public void StartNPC()
-        {
-            if (NetworkManager.Singleton == null || !NetworkManager.Singleton.IsServer || m_Waypoints.Length == 0) return;
-            m_IsStopped = false;
-            m_NetIsWalking.Value = true;
-            if (m_Animator != null) m_Animator.SetBool("IsWalking", true);
+            m_Waypoints = waypoints;
+            m_CurrentWaypointIndex = 0;
+
+            if (m_Waypoints != null && m_Waypoints.Length > 0)
+            {
+                m_IsStopped = false;
+                m_NetIsWalking.Value = true;
+                if (m_Animator != null) m_Animator.SetBool("IsWalking", true);
+            }
         }
 
         private void Update()
         {
-            if (NetworkManager.Singleton == null) return;
+            if (!IsSpawned) return;
 
-            if (NetworkManager.Singleton.IsServer)
+            if (IsServer)
             {
-                if (!m_IsStopped && m_Waypoints.Length > 0)
+                if (!m_IsStopped && m_Waypoints != null && m_Waypoints.Length > 0)
                     MoveTowardsWaypoint();
 
-                // Solo escribir NetworkVariables si el NB está correctamente spawneado
-                if (IsSpawned)
-                {
-                    m_NetPosition.Value = transform.position;
-                    m_NetRotationY.Value = transform.eulerAngles.y;
-                }
+                m_NetPosition.Value = transform.position;
+                m_NetRotationY.Value = transform.eulerAngles.y;
             }
             else
             {
@@ -164,7 +127,7 @@ namespace XRMultiplayer.SafetyGame
             if (targetWaypoint == null) return;
 
             Vector3 targetPosition = targetWaypoint.position;
-            // Alinear al plano de la mesa para evitar desplazamientos verticales extraños
+            // Mantener al NPC en su propio plano de altura
             targetPosition.y = transform.position.y;
 
             Vector3 moveDirection = (targetPosition - transform.position).normalized;
@@ -172,12 +135,10 @@ namespace XRMultiplayer.SafetyGame
 
             if (moveDirection != Vector3.zero)
             {
-                // Rotar suavemente hacia el waypoint
                 Quaternion targetRotation = Quaternion.LookRotation(moveDirection);
                 transform.rotation = Quaternion.Slerp(transform.rotation, targetRotation, Time.deltaTime * 6f);
             }
 
-            // Comprobar si llegó al destino
             if (Vector3.Distance(transform.position, targetPosition) < m_ArrivalThreshold)
             {
                 if (m_CurrentWaypointIndex == m_Waypoints.Length - 1)
@@ -199,21 +160,18 @@ namespace XRMultiplayer.SafetyGame
         /// </summary>
         public void AlertNPC()
         {
-            if (isAlerted.Value) return;
+            if (isAlerted.Value || m_IsOnCooldown) return;
 
             if (IsOwner)
-            {
                 ApplyAlert();
-            }
             else
-            {
                 AlertNPCServerRpc();
-            }
         }
 
         [Rpc(SendTo.Server)]
         private void AlertNPCServerRpc()
         {
+            if (isAlerted.Value || m_IsOnCooldown) return;
             ApplyAlert();
         }
 
@@ -224,12 +182,10 @@ namespace XRMultiplayer.SafetyGame
             isAlerted.Value = true;
             m_IsStopped = true;
             m_NetIsWalking.Value = false;
+            m_NetUIVisible.Value = true;
             if (m_Animator != null) m_Animator.SetBool("IsWalking", false);
 
-            if (m_ResumeMovementCoroutine != null)
-            {
-                StopCoroutine(m_ResumeMovementCoroutine);
-            }
+            if (m_ResumeMovementCoroutine != null) StopCoroutine(m_ResumeMovementCoroutine);
             m_ResumeMovementCoroutine = StartCoroutine(ResumeMovementRoutine());
         }
 
@@ -237,13 +193,18 @@ namespace XRMultiplayer.SafetyGame
         {
             yield return new WaitForSeconds(m_AlertDuration);
 
-            if (IsServer)
-            {
-                m_IsStopped = false;
-                isAlerted.Value = false;
-                m_NetIsWalking.Value = true;
-                if (m_Animator != null) m_Animator.SetBool("IsWalking", true);
-            }
+            if (!IsServer) yield break;
+
+            m_IsStopped = false;
+            isAlerted.Value = false;
+            m_NetIsWalking.Value = true;
+            if (m_Animator != null) m_Animator.SetBool("IsWalking", true);
+
+            // Cooldown: bloquea nuevas alertas y mantiene la UI visible durante m_AlertCooldown segundos.
+            m_IsOnCooldown = true;
+            yield return new WaitForSeconds(m_AlertCooldown);
+            m_IsOnCooldown = false;
+            m_NetUIVisible.Value = false;
         }
 
         private IEnumerator WaitAtEndOfRoute()
@@ -267,10 +228,10 @@ namespace XRMultiplayer.SafetyGame
             if (!IsServer) return;
 
             m_IsStopped = true;
-            if (m_ResumeMovementCoroutine != null)
-            {
-                StopCoroutine(m_ResumeMovementCoroutine);
-            }
+            m_NetIsWalking.Value = false;
+            if (m_Animator != null) m_Animator.SetBool("IsWalking", false);
+            if (m_ResumeMovementCoroutine != null) StopCoroutine(m_ResumeMovementCoroutine);
+            if (m_EndOfRouteCoroutine != null) StopCoroutine(m_EndOfRouteCoroutine);
         }
 
         /// <summary>
@@ -281,6 +242,12 @@ namespace XRMultiplayer.SafetyGame
             if (!IsServer) return;
 
             isInDanger.Value = state;
+        }
+
+        private void SetUIContentVisible(bool visible)
+        {
+            if (m_AlertUIContent != null)
+                m_AlertUIContent.SetActive(visible);
         }
 
 #if UNITY_EDITOR
@@ -297,15 +264,12 @@ namespace XRMultiplayer.SafetyGame
 
                 Vector3 pos = m_Waypoints[i].position;
 
-                // Esfera amarilla en cada waypoint
                 Gizmos.color = Color.yellow;
                 Gizmos.DrawSphere(pos, sphereRadius);
 
-                // Número de orden con label
                 UnityEditor.Handles.color = Color.white;
                 UnityEditor.Handles.Label(pos + Vector3.up * sphereRadius * 2f, $"{i + 1}");
 
-                // Línea hacia el siguiente waypoint
                 int next = (i + 1) % m_Waypoints.Length;
                 if (m_Waypoints[next] != null)
                 {
@@ -313,16 +277,7 @@ namespace XRMultiplayer.SafetyGame
                     Gizmos.DrawLine(pos, m_Waypoints[next].position);
                 }
             }
-
-            // Círculo de llegada alrededor de cada waypoint (muestra el umbral exacto)
-            Gizmos.color = new Color(1f, 0.5f, 0f, 0.5f);
-            foreach (var wp in m_Waypoints)
-            {
-                if (wp != null)
-                    Gizmos.DrawWireSphere(wp.position, m_ArrivalThreshold);
-            }
         }
 #endif
     }
 }
-

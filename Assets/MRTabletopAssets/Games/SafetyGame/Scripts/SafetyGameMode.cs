@@ -19,6 +19,19 @@ namespace UnityEngine.XR.Templates.MRTTabletopAssets
         [Tooltip("Dispensador de conos del minijuego. Necesario para reiniciar sus corrutinas al mostrar el modo.")]
         public NetworkObjectDispenser coneDispenser;
 
+        [Tooltip("Dispensador de barreras del minijuego.")]
+        public NetworkObjectDispenser barrierDispenser;
+
+        [Header("Trabajador NPC (spawn dinámico)")]
+        [Tooltip("Prefab de red del WorkerNPC. Debe estar registrado en la NetworkPrefabsList del NetworkManager.")]
+        [SerializeField] private NetworkObject m_WorkerNpcPrefab;
+
+        [Tooltip("Ruta de waypoints que recorrerá el trabajador. Objetos de escena dentro del Cityconstruction.")]
+        [SerializeField] private Transform[] m_WorkerWaypoints;
+
+        // Instancia spawneada del trabajador (solo válida en el servidor).
+        private NetworkObject m_SpawnedWorker;
+
         /// <summary>
         /// ID del modo de juego para el GameModeManager.
         /// </summary>
@@ -47,6 +60,11 @@ namespace UnityEngine.XR.Templates.MRTTabletopAssets
                 coneDispenser.Hide();
             }
 
+            if (barrierDispenser != null && barrierDispenser.gameObject.activeInHierarchy)
+            {
+                barrierDispenser.Hide();
+            }
+
             if (gameModeContainer != null)
             {
                 gameModeContainer.SetActive(false);
@@ -71,6 +89,11 @@ namespace UnityEngine.XR.Templates.MRTTabletopAssets
                 coneDispenser.Show();
             }
 
+            if (barrierDispenser != null)
+            {
+                barrierDispenser.Show();
+            }
+
             OnGameModeStart();
         }
 
@@ -82,6 +105,10 @@ namespace UnityEngine.XR.Templates.MRTTabletopAssets
             Debug.Log($"[Safety Game Mode] OnGameModeStart invocado. (Servidor: {IsServer})");
             // Solo el servidor inicializa y activa el juego en red
             if (!IsServer) return;
+
+            // Spawn dinámico del trabajador. Se hace primero para que el NPC arranque
+            // aunque el SafetyGameManager (sobre el contenedor) aún no esté sincronizado.
+            SpawnWorker();
 
             if (SafetyGameManager.Instance != null)
             {
@@ -105,11 +132,106 @@ namespace UnityEngine.XR.Templates.MRTTabletopAssets
             Debug.Log($"[Safety Game Mode] OnGameModeEnd invocado. (Servidor: {IsServer})");
             if (!IsServer) return;
 
+            DespawnWorker();
+
             if (SafetyGameManager.Instance != null)
             {
                 SafetyGameManager.Instance.isGameActive.Value = false;
                 Debug.Log("[Safety Game Mode] Minijuego de seguridad finalizado en el servidor.");
             }
         }
+
+        /// <summary>
+        /// Instancia y spawnea el trabajador como hijo de SafetyGameEnvironment (este objeto),
+        /// heredando su escala de mesa (0.0085). Solo servidor.
+        /// </summary>
+        private void SpawnWorker()
+        {
+            if (!IsServer || m_SpawnedWorker != null) return;
+
+            if (m_WorkerNpcPrefab == null)
+            {
+                Debug.LogWarning("[Safety Game Mode] No hay prefab de WorkerNPC asignado; no se puede spawnear el trabajador.");
+                return;
+            }
+
+            // Instanciar como hijo de este objeto (escala 0.0085) sin pasar a espacio de mundo,
+            // para que conserve localScale = 1 y herede la escala del padre.
+            NetworkObject worker = Instantiate(m_WorkerNpcPrefab, transform);
+            worker.transform.localScale = Vector3.one;
+
+            // Colocar en el primer waypoint (posición de mundo) si existe la ruta.
+            if (m_WorkerWaypoints != null && m_WorkerWaypoints.Length > 0 && m_WorkerWaypoints[0] != null)
+            {
+                worker.transform.position = m_WorkerWaypoints[0].position;
+            }
+
+            worker.Spawn(true);
+
+            SafetyNPC npc = worker.GetComponent<SafetyNPC>();
+            if (npc != null)
+            {
+                npc.InitializeRoute(m_WorkerWaypoints);
+            }
+
+            m_SpawnedWorker = worker;
+            Debug.Log("[Safety Game Mode] WorkerNPC spawneado y ruta asignada.");
+        }
+
+        /// <summary>
+        /// Despawnea y destruye al trabajador. Solo servidor.
+        /// </summary>
+        private void DespawnWorker()
+        {
+            if (m_SpawnedWorker == null) return;
+
+            if (m_SpawnedWorker.IsSpawned)
+            {
+                m_SpawnedWorker.Despawn(true);
+            }
+            else
+            {
+                Destroy(m_SpawnedWorker.gameObject);
+            }
+
+            m_SpawnedWorker = null;
+        }
+
+#if UNITY_EDITOR
+        private void OnDrawGizmosSelected()
+        {
+            if (m_WorkerWaypoints == null || m_WorkerWaypoints.Length == 0) return;
+
+            float scale = transform.lossyScale.x;
+            float sphereRadius = scale * 1.2f;
+
+            for (int i = 0; i < m_WorkerWaypoints.Length; i++)
+            {
+                if (m_WorkerWaypoints[i] == null) continue;
+
+                Vector3 pos = m_WorkerWaypoints[i].position;
+
+                Gizmos.color = Color.yellow;
+                Gizmos.DrawSphere(pos, sphereRadius);
+
+                UnityEditor.Handles.color = Color.white;
+                UnityEditor.Handles.Label(pos + Vector3.up * sphereRadius * 2f, $"{i + 1}");
+
+                int next = (i + 1) % m_WorkerWaypoints.Length;
+                if (m_WorkerWaypoints[next] != null)
+                {
+                    Gizmos.color = Color.cyan;
+                    Gizmos.DrawLine(pos, m_WorkerWaypoints[next].position);
+                }
+            }
+
+            Gizmos.color = new Color(1f, 0.5f, 0f, 0.5f);
+            foreach (var wp in m_WorkerWaypoints)
+            {
+                if (wp != null)
+                    Gizmos.DrawWireSphere(wp.position, 0.001f);
+            }
+        }
+#endif
     }
 }

@@ -10,6 +10,7 @@ TagManager:
   - Anchor
   - Projectile
   - SafetyCone
+  - SafetyBarrier
   layers:
   - Default
   - TransparentFX
