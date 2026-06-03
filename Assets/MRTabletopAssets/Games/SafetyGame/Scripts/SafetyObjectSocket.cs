@@ -22,9 +22,31 @@ namespace XRMultiplayer.SafetyGame
 
         private XRSocketInteractor m_SocketInteractor;
 
+        /// <summary>Tag que este socket acepta (ej. SafetyCone, SafetyBarrier).</summary>
+        public string ObjectTag => m_ObjectTag;
+
         private void Awake()
         {
             m_SocketInteractor = GetComponent<XRSocketInteractor>();
+        }
+
+        public override void OnNetworkSpawn()
+        {
+            base.OnNetworkSpawn();
+
+            if (SafetyGameManager.Instance != null)
+                SafetyGameManager.Instance.RegisterObjectSocket(this);
+        }
+
+        /// <summary>
+        /// Indica si el socket tiene colocado un objeto válido (del tag esperado).
+        /// </summary>
+        public bool IsOccupiedByValidObject()
+        {
+            if (m_SocketInteractor == null || !m_SocketInteractor.hasSelection) return false;
+
+            var selected = m_SocketInteractor.firstInteractableSelected;
+            return selected != null && selected.transform.CompareTag(m_ObjectTag);
         }
 
         private void OnEnable()
@@ -44,13 +66,39 @@ namespace XRMultiplayer.SafetyGame
         private void OnObjectPlaced(SelectEnterEventArgs args)
         {
             if (args.interactableObject.transform.CompareTag(m_ObjectTag))
+            {
                 NotifyHazardZone();
+                NotifyObjectivesManager();
+            }
         }
 
         private void OnObjectRemoved(SelectExitEventArgs args)
         {
             if (args.interactableObject.transform.CompareTag(m_ObjectTag))
+            {
                 NotifyHazardZone();
+                NotifyObjectivesManager();
+            }
+        }
+
+        /// <summary>
+        /// Pide al manager que recuente los objetivos colocados (server-authoritative).
+        /// </summary>
+        private void NotifyObjectivesManager()
+        {
+            if (SafetyGameManager.Instance == null) return;
+
+            if (SafetyGameManager.Instance.IsServer)
+                SafetyGameManager.Instance.RecountPlacedObjects();
+            else
+                RecountObjectivesServerRpc();
+        }
+
+        [Rpc(SendTo.Server)]
+        private void RecountObjectivesServerRpc()
+        {
+            if (SafetyGameManager.Instance != null)
+                SafetyGameManager.Instance.RecountPlacedObjects();
         }
 
         private void NotifyHazardZone()

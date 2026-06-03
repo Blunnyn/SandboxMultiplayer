@@ -16,13 +16,30 @@ namespace XRMultiplayer.SafetyGame
         [SerializeField] private float m_RoundDuration = 180f;
         [SerializeField] private int m_StartingScore = 1000;
 
+        [Header("Objetivos (conos y barreras a colocar)")]
+        [Tooltip("Total de conos que el escenario requiere colocar para completar el objetivo.")]
+        [SerializeField] private int m_ConesRequired = 8;
+        [Tooltip("Total de barreras que el escenario requiere colocar para completar el objetivo.")]
+        [SerializeField] private int m_BarriersRequired = 2;
+
+        // Tags que distinguen el tipo de objeto colocado en cada socket.
+        private const string k_ConeTag = "SafetyCone";
+        private const string k_BarrierTag = "SafetyBarrier";
+
         // Variables de red sincronizadas para todos los clientes
         public NetworkVariable<int> score = new NetworkVariable<int>(1000, NetworkVariableReadPermission.Everyone, NetworkVariableWritePermission.Owner);
         public NetworkVariable<float> timeRemaining = new NetworkVariable<float>(180f, NetworkVariableReadPermission.Everyone, NetworkVariableWritePermission.Owner);
         public NetworkVariable<bool> isGameActive = new NetworkVariable<bool>(false, NetworkVariableReadPermission.Everyone, NetworkVariableWritePermission.Owner);
 
+        // Progreso de objetivos (colocados vs requeridos). El UI los lee para mostrar cuántos faltan.
+        public NetworkVariable<int> conesPlaced = new NetworkVariable<int>(0, NetworkVariableReadPermission.Everyone, NetworkVariableWritePermission.Owner);
+        public NetworkVariable<int> conesRequired = new NetworkVariable<int>(0, NetworkVariableReadPermission.Everyone, NetworkVariableWritePermission.Owner);
+        public NetworkVariable<int> barriersPlaced = new NetworkVariable<int>(0, NetworkVariableReadPermission.Everyone, NetworkVariableWritePermission.Owner);
+        public NetworkVariable<int> barriersRequired = new NetworkVariable<int>(0, NetworkVariableReadPermission.Everyone, NetworkVariableWritePermission.Owner);
+
         private List<SafetyHazardZone> m_RegisteredHazardZones = new List<SafetyHazardZone>();
         private List<SafetyNPC> m_RegisteredNPCs = new List<SafetyNPC>();
+        private List<SafetyObjectSocket> m_RegisteredSockets = new List<SafetyObjectSocket>();
 
         private void Awake()
         {
@@ -45,6 +62,10 @@ namespace XRMultiplayer.SafetyGame
                 score.Value = m_StartingScore;
                 timeRemaining.Value = m_RoundDuration;
                 isGameActive.Value = true;
+
+                conesRequired.Value = m_ConesRequired;
+                barriersRequired.Value = m_BarriersRequired;
+                RecountPlacedObjects();
             }
         }
 
@@ -101,6 +122,41 @@ namespace XRMultiplayer.SafetyGame
             {
                 m_RegisteredNPCs.Add(npc);
             }
+        }
+
+        /// <summary>
+        /// Registra un socket de colocación de objetos para el conteo de objetivos.
+        /// </summary>
+        public void RegisterObjectSocket(SafetyObjectSocket socket)
+        {
+            if (socket != null && !m_RegisteredSockets.Contains(socket))
+            {
+                m_RegisteredSockets.Add(socket);
+                RecountPlacedObjects();
+            }
+        }
+
+        /// <summary>
+        /// Recuenta cuántos conos y barreras hay colocados entre todos los sockets registrados.
+        /// Solo el servidor escribe las NetworkVariables; los clientes las leen para el UI.
+        /// </summary>
+        public void RecountPlacedObjects()
+        {
+            if (!IsServer) return;
+
+            int cones = 0;
+            int barriers = 0;
+
+            foreach (var socket in m_RegisteredSockets)
+            {
+                if (socket == null || !socket.IsOccupiedByValidObject()) continue;
+
+                if (socket.ObjectTag == k_ConeTag) cones++;
+                else if (socket.ObjectTag == k_BarrierTag) barriers++;
+            }
+
+            conesPlaced.Value = cones;
+            barriersPlaced.Value = barriers;
         }
 
         private void EndGame()

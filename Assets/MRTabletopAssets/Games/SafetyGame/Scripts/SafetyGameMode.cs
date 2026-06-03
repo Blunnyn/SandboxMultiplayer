@@ -22,6 +22,10 @@ namespace UnityEngine.XR.Templates.MRTTabletopAssets
         [Tooltip("Dispensador de barreras del minijuego.")]
         public NetworkObjectDispenser barrierDispenser;
 
+        [Header("UI Local (se activa/desactiva en todos los clientes)")]
+        [Tooltip("Panel de introducción/objetivos. No es un NetworkObject: ShowGameMode lo activa localmente en cada jugador.")]
+        [SerializeField] private GameObject m_IntroUI;
+
         [Header("Trabajador NPC (spawn dinámico)")]
         [Tooltip("Prefab de red del WorkerNPC. Debe estar registrado en la NetworkPrefabsList del NetworkManager.")]
         [SerializeField] private NetworkObject m_WorkerNpcPrefab;
@@ -55,6 +59,8 @@ namespace UnityEngine.XR.Templates.MRTTabletopAssets
         {
             Debug.Log($"[Safety Game Mode] Ocultando el modo de juego (Servidor: {IsServer}, Cliente ID: {NetworkManager.Singleton.LocalClientId})");
 
+            if (m_IntroUI != null) m_IntroUI.SetActive(false);
+
             if (coneDispenser != null && coneDispenser.gameObject.activeInHierarchy)
             {
                 coneDispenser.Hide();
@@ -79,6 +85,9 @@ namespace UnityEngine.XR.Templates.MRTTabletopAssets
         public void ShowGameMode()
         {
             Debug.Log($"[Safety Game Mode] Mostrando el modo de juego (Servidor: {IsServer}, Cliente ID: {NetworkManager.Singleton.LocalClientId})");
+
+            if (m_IntroUI != null) m_IntroUI.SetActive(true);
+
             if (gameModeContainer != null)
             {
                 gameModeContainer.SetActive(true);
