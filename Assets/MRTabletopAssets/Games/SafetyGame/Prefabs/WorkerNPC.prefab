@@ -1887,6 +1887,7 @@ MonoBehaviour:
   m_EndOfRouteWaitTime: 20
   m_Animator: {fileID: 8729036008271713911}
   m_AlertUIContent: {fileID: 4593763932852493836}
+  m_AlertAudioSource: {fileID: 1514541486452910332}
   isInDanger:
     m_InternalValue: 0
   isAlerted:
@@ -1934,46 +1935,9 @@ MonoBehaviour:
           m_StringArgument: 
           m_BoolArgument: 0
         m_CallState: 2
-      - m_Target: {fileID: 4593763932852493836}
-        m_TargetAssemblyTypeName: UnityEngine.GameObject, UnityEngine
-        m_MethodName: SetActive
-        m_Mode: 6
-        m_Arguments:
-          m_ObjectArgument: {fileID: 0}
-          m_ObjectArgumentAssemblyTypeName: UnityEngine.Object, UnityEngine
-          m_IntArgument: 0
-          m_FloatArgument: 0
-          m_StringArgument: 
-          m_BoolArgument: 1
-        m_CallState: 2
-      - m_Target: {fileID: 1514541486452910332}
-        m_TargetAssemblyTypeName: UnityEngine.AudioSource, UnityEngine
-        m_MethodName: PlayOneShot
-        m_Mode: 2
-        m_Arguments:
-          m_ObjectArgument: {fileID: 8300000, guid: 33b8698f2fb83824daa83048b77e5c59,
-            type: 3}
-          m_ObjectArgumentAssemblyTypeName: UnityEngine.AudioClip, UnityEngine
-          m_IntArgument: 0
-          m_FloatArgument: 0
-          m_StringArgument: 
-          m_BoolArgument: 1
-        m_CallState: 2
   m_LastHoverExited:
     m_PersistentCalls:
-      m_Calls:
-      - m_Target: {fileID: 4593763932852493836}
-        m_TargetAssemblyTypeName: UnityEngine.GameObject, UnityEngine
-        m_MethodName: SetActive
-        m_Mode: 6
-        m_Arguments:
-          m_ObjectArgument: {fileID: 0}
-          m_ObjectArgumentAssemblyTypeName: UnityEngine.Object, UnityEngine
-          m_IntArgument: 0
-          m_FloatArgument: 0
-          m_StringArgument: 
-          m_BoolArgument: 0
-        m_CallState: 2
+      m_Calls: []
   m_HoverEntered:
     m_PersistentCalls:
       m_Calls: []
@@ -3328,6 +3292,7 @@ GameObject:
   - component: {fileID: 623952795269471873}
   - component: {fileID: 3163976308226226879}
   - component: {fileID: 7458274768857291894}
+  - component: {fileID: 7802399289921148629}
   m_Layer: 0
   m_Name: UI
   m_TagString: Untagged
@@ -3418,6 +3383,23 @@ MonoBehaviour:
   m_BlockingMask:
     serializedVersion: 2
     m_Bits: 4294967295
+--- !u!114 &7802399289921148629
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 9079562679947849427}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 3966ae6fd59ed8841aa0dba9be1a1ec5, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: MRTTT::XRMultiplayer.FloatingBillboard
+  m_FaceCamera: 1
+  m_RotationSpeed: 8
+  m_FloatEffect: 0
+  m_FloatAmplitude: 0.5
+  m_FloatSpeed: 1.2
 --- !u!1001 &3431810562591717429
 PrefabInstance:
   m_ObjectHideFlags: 0

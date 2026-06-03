@@ -23,6 +23,8 @@ namespace XRMultiplayer.SafetyGame
         [Header("UI de Alerta")]
         [Tooltip("GameObject hijo dentro del Canvas que se activa/desactiva para todos los jugadores cuando se interactúa con el trabajador (p.ej. el panel o imagen de alerta, no el Canvas raíz).")]
         [SerializeField] private GameObject m_AlertUIContent;
+        [Tooltip("AudioSource que reproduce el sonido de alerta. Se dispara una sola vez por ciclo, desde código, no desde eventos de hover.")]
+        [SerializeField] private AudioSource m_AlertAudioSource;
 
         // La ruta se asigna en runtime desde el servidor (los waypoints son objetos de escena,
         // no se pueden serializar en el prefab). Solo el servidor la utiliza.
@@ -38,9 +40,16 @@ namespace XRMultiplayer.SafetyGame
         private NetworkVariable<bool> m_NetIsWalking = new NetworkVariable<bool>(false, NetworkVariableReadPermission.Everyone, NetworkVariableWritePermission.Server);
         private NetworkVariable<bool> m_NetUIVisible = new NetworkVariable<bool>(false, NetworkVariableReadPermission.Everyone, NetworkVariableWritePermission.Server);
 
+        private void Awake()
+        {
+            if (m_AlertAudioSource == null)
+                m_AlertAudioSource = GetComponent<AudioSource>();
+        }
+
         private int m_CurrentWaypointIndex = 0;
         private bool m_IsStopped = true;
         private bool m_IsOnCooldown = false;
+        private bool m_IsLocalAlertPending = false;
         private bool m_HasNetworkData = false;
         private Coroutine m_ResumeMovementCoroutine;
         private Coroutine m_EndOfRouteCoroutine;
@@ -76,8 +85,17 @@ namespace XRMultiplayer.SafetyGame
                 if (m_Animator != null) m_Animator.SetBool("IsWalking", m_NetIsWalking.Value);
             }
 
-            // Todos (servidor y clientes) reaccionan al cambio de visibilidad del contenido de la UI.
-            m_NetUIVisible.OnValueChanged += (_, visible) => SetUIContentVisible(visible);
+            // Todos (servidor y clientes) reaccionan al cambio de visibilidad de la UI.
+            // El sonido se reproduce aquí (una sola vez por ciclo) en lugar de desde eventos de hover,
+            // para que el cooldown del código lo controle completamente.
+            m_NetUIVisible.OnValueChanged += (_, visible) =>
+            {
+                SetUIContentVisible(visible);
+                if (visible)
+                    PlayAlertSound();
+                else
+                    m_IsLocalAlertPending = false;
+            };
             SetUIContentVisible(m_NetUIVisible.Value);
         }
 
@@ -160,7 +178,9 @@ namespace XRMultiplayer.SafetyGame
         /// </summary>
         public void AlertNPC()
         {
-            if (isAlerted.Value || m_IsOnCooldown) return;
+            if (isAlerted.Value || m_IsOnCooldown || m_IsLocalAlertPending) return;
+
+            m_IsLocalAlertPending = true;
 
             if (IsOwner)
                 ApplyAlert();
@@ -198,13 +218,13 @@ namespace XRMultiplayer.SafetyGame
             m_IsStopped = false;
             isAlerted.Value = false;
             m_NetIsWalking.Value = true;
+            m_NetUIVisible.Value = false;
             if (m_Animator != null) m_Animator.SetBool("IsWalking", true);
 
-            // Cooldown: bloquea nuevas alertas y mantiene la UI visible durante m_AlertCooldown segundos.
+            // Cooldown silencioso: el NPC ya camina y la UI está oculta, pero no se permiten nuevas alertas.
             m_IsOnCooldown = true;
             yield return new WaitForSeconds(m_AlertCooldown);
             m_IsOnCooldown = false;
-            m_NetUIVisible.Value = false;
         }
 
         private IEnumerator WaitAtEndOfRoute()
@@ -248,6 +268,12 @@ namespace XRMultiplayer.SafetyGame
         {
             if (m_AlertUIContent != null)
                 m_AlertUIContent.SetActive(visible);
+        }
+
+        private void PlayAlertSound()
+        {
+            if (m_AlertAudioSource != null && !m_AlertAudioSource.isPlaying)
+                m_AlertAudioSource.Play();
         }
 
 #if UNITY_EDITOR
