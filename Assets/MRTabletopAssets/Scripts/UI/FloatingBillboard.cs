@@ -15,6 +15,14 @@ namespace XRMultiplayer
         [SerializeField] private bool m_FaceCamera = true;
         [SerializeField] private float m_RotationSpeed = 8f;
 
+        [Header("Bloqueo de ejes (Billboard)")]
+        [Tooltip("Bloquea el eje X: el objeto no se inclinará arriba/abajo hacia la cámara.")]
+        [SerializeField] private bool m_LockX = false;
+        [Tooltip("Bloquea el eje Y: el objeto no girará horizontalmente hacia la cámara.")]
+        [SerializeField] private bool m_LockY = false;
+        [Tooltip("Bloquea el eje Z: el objeto no rotará lateralmente.")]
+        [SerializeField] private bool m_LockZ = false;
+
         [Header("Efecto flotante")]
         [Tooltip("Si está activo, el objeto oscilará verticalmente en su espacio local.")]
         [SerializeField] private bool m_FloatEffect = true;
@@ -23,6 +31,7 @@ namespace XRMultiplayer
 
         private Camera m_Camera;
         private Vector3 m_InitialLocalPosition;
+        private Vector3 m_LockedEuler;
 
         private void Awake()
         {
@@ -32,6 +41,7 @@ namespace XRMultiplayer
         private void Start()
         {
             m_InitialLocalPosition = transform.localPosition;
+            m_LockedEuler = transform.eulerAngles;
         }
 
         private void Update()
@@ -55,10 +65,30 @@ namespace XRMultiplayer
 
             // El canvas muestra su contenido en -Z, así que su forward (+Z) apunta
             // OPUESTO a la cámara para que el contenido sea visible al jugador.
-            Vector3 dirAwayFromCamera = (transform.position - m_Camera.transform.position).normalized;
-            if (dirAwayFromCamera == Vector3.zero) return;
+            Vector3 dir = (transform.position - m_Camera.transform.position).normalized;
+            if (dir == Vector3.zero) return;
 
-            Quaternion targetRotation = Quaternion.LookRotation(dirAwayFromCamera, Vector3.up);
+            // Lock X: se aplana la dirección al plano horizontal ANTES de calcular LookRotation.
+            // Reemplazar el Euler X del resultado no funciona porque los Euler son interdependientes.
+            if (m_LockX)
+            {
+                dir.y = 0f;
+                if (dir == Vector3.zero) return;
+                dir.Normalize();
+            }
+
+            Quaternion targetRotation = Quaternion.LookRotation(dir, Vector3.up);
+
+            // Lock Y y Lock Z se aplican sobre los Euler del resultado.
+            // Son aceptables aquí porque Y (yaw) y Z (roll) están menos acoplados en el orden ZXY de Unity.
+            if (m_LockY || m_LockZ)
+            {
+                Vector3 e = targetRotation.eulerAngles;
+                if (m_LockY) e.y = m_LockedEuler.y;
+                if (m_LockZ) e.z = m_LockedEuler.z;
+                targetRotation = Quaternion.Euler(e);
+            }
+
             transform.rotation = Quaternion.Slerp(transform.rotation, targetRotation, Time.deltaTime * m_RotationSpeed);
         }
 
