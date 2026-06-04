@@ -18,6 +18,7 @@ GameObject:
   - component: {fileID: 5593499198762204860}
   - component: {fileID: 4609657205851238181}
   - component: {fileID: -4263949876546747036}
+  - component: {fileID: 6827453190025394666}
   m_Layer: 0
   m_Name: RoadBlock
   m_TagString: SafetyBarrier
@@ -421,3 +422,16 @@ MonoBehaviour:
   m_AllowCollisionOwnershipExchange: 1
   m_MinExchangeVelocityMagitude: 0.025
   spawnLocked: 1
+--- !u!114 &6827453190025394666
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 5389499260944440496}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 2f8e99e05c02a80478b38b4ef0084d1a, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: MRTTT::XRMultiplayer.GrabScaleEffect
+  m_GrabScaleMultiplier: 3

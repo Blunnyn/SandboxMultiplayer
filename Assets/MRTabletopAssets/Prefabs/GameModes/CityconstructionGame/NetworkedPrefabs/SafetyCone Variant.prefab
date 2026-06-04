@@ -105,6 +105,10 @@ PrefabInstance:
         type: 3}
       insertIndex: -1
       addedObject: {fileID: 5636619294803202051}
+    - targetCorrespondingSourceObject: {fileID: 1956315680376676, guid: 41c4aa0ed926d03478c0597806cb29ac,
+        type: 3}
+      insertIndex: -1
+      addedObject: {fileID: 784208649907636880}
   m_SourcePrefab: {fileID: 100100000, guid: 41c4aa0ed926d03478c0597806cb29ac, type: 3}
 --- !u!1 &3826990897808913880 stripped
 GameObject:
@@ -435,3 +439,16 @@ BoxCollider:
   serializedVersion: 3
   m_Size: {x: 0.40688974, y: 0.9889462, z: 0.39704517}
   m_Center: {x: -0.000000022351745, y: 0.4944731, z: 0.00000014901161}
+--- !u!114 &784208649907636880
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 3826990897808913880}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 2f8e99e05c02a80478b38b4ef0084d1a, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: MRTTT::XRMultiplayer.GrabScaleEffect
+  m_GrabScaleMultiplier: 3

@@ -1,6 +1,7 @@
 using System.Collections.Generic;
 using UnityEngine;
 using UnityEngine.XR.Interaction.Toolkit;
+using UnityEngine.XR.Interaction.Toolkit.Interactors;
 
 namespace XRMultiplayer
 {
@@ -93,12 +94,14 @@ namespace XRMultiplayer
 
         private void OnSelectEntered(SelectEnterEventArgs args)
         {
+            if (args.interactorObject is XRSocketInteractor) return;
             m_ActiveGrabCount++;
             m_UITarget.SetActive(true);
         }
 
         private void OnSelectExited(SelectExitEventArgs args)
         {
+            if (args.interactorObject is XRSocketInteractor) return;
             m_ActiveGrabCount = Mathf.Max(0, m_ActiveGrabCount - 1);
             if (m_ActiveGrabCount == 0)
                 m_UITarget.SetActive(false);

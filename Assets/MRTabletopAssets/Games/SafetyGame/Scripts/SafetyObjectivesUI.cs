@@ -32,6 +32,13 @@ namespace XRMultiplayer.SafetyGame
 
         private void OnEnable()
         {
+            // Los GameObjects de los TMP quedaron con active=false del mecanismo anterior
+            // (las listas de PlayerUIArea). Ahora su visibilidad la controla el padre (este
+            // panel): nos aseguramos de que estén activos siempre que este componente lo esté.
+            // OnEnable se dispara cada vez que el panel pasa a activo, así que se reaplica solo.
+            if (m_ConesText != null) m_ConesText.gameObject.SetActive(true);
+            if (m_BarriersText != null) m_BarriersText.gameObject.SetActive(true);
+
             StartCoroutine(BindWhenReady());
         }
 

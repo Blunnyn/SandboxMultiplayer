@@ -37,6 +37,11 @@ namespace XRMultiplayer.SafetyGame
         public NetworkVariable<int> barriersPlaced = new NetworkVariable<int>(0, NetworkVariableReadPermission.Everyone, NetworkVariableWritePermission.Owner);
         public NetworkVariable<int> barriersRequired = new NetworkVariable<int>(0, NetworkVariableReadPermission.Everyone, NetworkVariableWritePermission.Owner);
 
+        // Latch de objetivos completados: el servidor lo pone a true cuando se cumplen todos los
+        // requisitos y NO lo baja aunque luego se quite un objeto (evita que la pantalla final parpadee).
+        // Se restablece a false solo al reiniciar el escenario. El UI de fin de partida lo lee.
+        public NetworkVariable<bool> objectivesCompleted = new NetworkVariable<bool>(false, NetworkVariableReadPermission.Everyone, NetworkVariableWritePermission.Owner);
+
         private List<SafetyHazardZone> m_RegisteredHazardZones = new List<SafetyHazardZone>();
         private List<SafetyNPC> m_RegisteredNPCs = new List<SafetyNPC>();
         private List<SafetyObjectSocket> m_RegisteredSockets = new List<SafetyObjectSocket>();
@@ -66,19 +71,6 @@ namespace XRMultiplayer.SafetyGame
                 conesRequired.Value = m_ConesRequired;
                 barriersRequired.Value = m_BarriersRequired;
                 RecountPlacedObjects();
-            }
-        }
-
-        private void Update()
-        {
-            if (!IsServer || !isGameActive.Value) return;
-
-            // Actualizar tiempo de ronda en el servidor
-            timeRemaining.Value -= Time.deltaTime;
-            if (timeRemaining.Value <= 0)
-            {
-                timeRemaining.Value = 0f;
-                EndGame();
             }
         }
 
@@ -157,6 +149,64 @@ namespace XRMultiplayer.SafetyGame
 
             conesPlaced.Value = cones;
             barriersPlaced.Value = barriers;
+
+            // Latch de victoria: una vez completados, no se baja aunque luego quiten objetos.
+            // Solo RestartScenario() lo restablece a false.
+            if (!objectivesCompleted.Value &&
+                cones >= conesRequired.Value && barriers >= barriersRequired.Value)
+            {
+                objectivesCompleted.Value = true;
+            }
+        }
+
+        /// <summary>
+        /// Reinicia el escenario: despawnea todos los conos y barreras (colocados y sueltos),
+        /// vuelve el conteo a 0 y baja el latch de objetivos completados. Solo servidor.
+        /// </summary>
+        public void RestartScenario()
+        {
+            if (!IsServer) return;
+
+            DespawnAllByTag(k_ConeTag);
+            DespawnAllByTag(k_BarrierTag);
+
+            RecountPlacedObjects();
+            objectivesCompleted.Value = false;
+
+            Debug.Log("[Safety Game Manager] Escenario reiniciado: conos y barreras despawneados, conteo a 0.");
+        }
+
+        /// <summary>
+        /// Despawnea todos los NetworkObjects de la escena que tengan el tag indicado.
+        /// </summary>
+        private void DespawnAllByTag(string tag)
+        {
+            GameObject[] objects = GameObject.FindGameObjectsWithTag(tag);
+            foreach (var go in objects)
+            {
+                if (go.TryGetComponent(out NetworkObject netObj) && netObj.IsSpawned)
+                {
+                    netObj.Despawn(true);
+                }
+            }
+        }
+
+        /// <summary>
+        /// Punto de entrada para el botón de reinicio (UI local). Ejecuta en servidor;
+        /// si lo llama un cliente, lo reenvía vía RPC.
+        /// </summary>
+        public void RequestRestart()
+        {
+            if (IsServer)
+                RestartScenario();
+            else
+                RequestRestartServerRpc();
+        }
+
+        [Rpc(SendTo.Server)]
+        private void RequestRestartServerRpc()
+        {
+            RestartScenario();
         }
 
         private void EndGame()
