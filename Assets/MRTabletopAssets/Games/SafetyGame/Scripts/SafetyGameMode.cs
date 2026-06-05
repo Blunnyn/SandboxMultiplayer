@@ -1,3 +1,4 @@
+using System;
 using Unity.Netcode;
 using UnityEngine;
 using XRMultiplayer.SafetyGame;
@@ -10,6 +11,11 @@ namespace UnityEngine.XR.Templates.MRTTabletopAssets
     /// </summary>
     public class SafetyGameMode : NetworkBehaviour, IGameMode
     {
+        /// <summary>
+        /// Se invoca en todos los clientes al mostrar (true) u ocultar (false) este modo de juego.
+        /// Permite que UIs locales reaccionen sin acoplamiento directo de jerarquía.
+        /// </summary>
+        public static event Action<bool> OnSafetyGameToggled;
         [Header("Configuración del Modo de Juego")]
         [SerializeField] private int m_GameModeID = 5;
 
@@ -59,6 +65,8 @@ namespace UnityEngine.XR.Templates.MRTTabletopAssets
         {
             Debug.Log($"[Safety Game Mode] Ocultando el modo de juego (Servidor: {IsServer}, Cliente ID: {NetworkManager.Singleton.LocalClientId})");
 
+            OnSafetyGameToggled?.Invoke(false);
+
             if (m_IntroUI != null) m_IntroUI.SetActive(false);
 
             if (coneDispenser != null && coneDispenser.gameObject.activeInHierarchy)
@@ -85,6 +93,8 @@ namespace UnityEngine.XR.Templates.MRTTabletopAssets
         public void ShowGameMode()
         {
             Debug.Log($"[Safety Game Mode] Mostrando el modo de juego (Servidor: {IsServer}, Cliente ID: {NetworkManager.Singleton.LocalClientId})");
+
+            OnSafetyGameToggled?.Invoke(true);
 
             if (m_IntroUI != null) m_IntroUI.SetActive(true);
 
